@@ -3,22 +3,26 @@ import './App.css';
 import { SnackbarProvider } from 'notistack';
 import NotificationService from 'components/NotificationService';
 import { BrowserRouter } from 'react-router-dom'
-import AppRoutes from './services/routes'
+import { store } from 'store'
+import { Provider } from 'react-redux'
+import AppRoutes from './navigation/Routes'
 
 function App() {
   return (
-    <BrowserRouter>
-      <SnackbarProvider
-        hideIconVariant
+    <Provider store={store}>
+      <BrowserRouter>
+        <SnackbarProvider
+          hideIconVariant
 
-        autoHideDuration={3000}
-        maxSnack={3}
-          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-      >
-        <NotificationService />
-        <AppRoutes />
-      </SnackbarProvider>
-    </BrowserRouter>
+          autoHideDuration={3000}
+          maxSnack={3}
+            anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        >
+          <NotificationService />
+           <AppRoutes />
+        </SnackbarProvider>
+      </BrowserRouter>
+    </Provider>
   );
 }
 

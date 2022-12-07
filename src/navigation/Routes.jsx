@@ -1,5 +1,5 @@
-import {BASIC_ROUTES} from 'constants/index'
-import {Router, Routes, Route} from 'react-router-dom';
+import { BASIC_ROUTES } from 'constants'
+import { Routes, Route } from 'react-router-dom';
 import { CarsPage, HomePage, PageNotFound } from 'pages';
 
 const AppRoutes = () => {
@@ -8,8 +8,8 @@ const AppRoutes = () => {
       <Route path={BASIC_ROUTES.HOME} element={<HomePage />} />
       <Route path={BASIC_ROUTES.CARS} element={<CarsPage />} />
       <Route path="*" element={<PageNotFound />} />
-    </Routes>
-  )
+  </Routes>
+)
 }
 
 export default AppRoutes;
