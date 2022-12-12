@@ -4,10 +4,20 @@ import UserModel from '@models/users.model';
 import CarModel from '@models/cars.model';
 import { logger } from '@utils/logger';
 
+const dialectOptions =
+  NODE_ENV === 'production'
+    ? {
+        ssl: {
+          require: true,
+          rejectUnauthorized: false,
+        },
+      }
+    : {};
+
 const sequelize = new Sequelize.Sequelize(DB_DATABASE, DB_USER, DB_PASSWORD, {
   dialect: 'postgres',
   host: DB_HOST,
-  port: DB_PORT,
+  port: Number(DB_PORT),
   timezone: '+02:00',
   define: {
     charset: 'utf8mb4',
@@ -24,6 +34,7 @@ const sequelize = new Sequelize.Sequelize(DB_DATABASE, DB_USER, DB_PASSWORD, {
     logger.info(time + 'ms' + ' ' + query);
   },
   benchmark: true,
+  dialectOptions,
 });
 
 sequelize.authenticate();
