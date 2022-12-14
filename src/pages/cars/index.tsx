@@ -1,43 +1,164 @@
 import React from 'react'
-import { Box, Button, CircularProgress, Container, Typography } from '@mui/material'
+import {Box, Button, CircularProgress, Container, Tooltip, Typography} from '@mui/material'
 import CarItem from './components/car-item'
 import { Car } from '../../types'
-import { useGetAllCarsQuery } from '../../store/cars/services'
-import { BASE_API_URL } from '../../constants'
+import {useGetAllCarsQuery, useAddCarMutation, useDeleteCarMutation, useEditCarMutation} from '../../store/cars/services'
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
+import CloseIcon from '@mui/icons-material/Close';
+import { styles } from './styles';
+import CarModal from '../../components/CarModal';
+import Modal from '../../components/Modal';
+import {errorNotification, successNotification} from '../../helpers';
 
 const CarsPage: React.FC = () => {
 
-  const { data, error, isLoading: isCarsLoading } = useGetAllCarsQuery()
+  const { refetch: refetchAllCars, data: allCarsData, error: getAllCarsError, isLoading: isCarsLoading } = useGetAllCarsQuery()
+  const [addCar, { isLoading: isAddCarLoading } ] = useAddCarMutation()
+  const [editCar, { isLoading: isEditCarLoading } ] = useEditCarMutation()
+  const [deleteCar] = useDeleteCarMutation()
 
-  React.useEffect(() => {
-    console.log('CARS API: ', BASE_API_URL + '/cars')
-    console.log('useGetAllCarsQuery: ', data);
-  }, [data]);
+  const [addNewCarModalVisible, setAddNewCarModalVisible] = React.useState<boolean>(false);
+  const [editCarModalVisible, setEditCarModalVisible] = React.useState<Car | null>(null);
+  const [deleteCarModalVisible, setDeleteCarModalVisible] = React.useState<Car | null>(null);
+
+  const [isFilterBarVisible, setIsFilterBarVisible] = React.useState<boolean>(false);
 
   const handleAddNewCar = () => {
+    setAddNewCarModalVisible(true);
+  }
+  const showEditModal = (id: string) => {
 
+    // @ts-ignore
+    const {createdAt, updatedAt, ...rest}: Car = allCarsData.data.find((item:Car) => item.id === id);
+    setEditCarModalVisible(rest);
+  }
+  const showRemoveModal = (id: string) => {
+
+    // @ts-ignore
+    const car: Car = allCarsData?.data.find((item:Car) => item.id === id);
+    setDeleteCarModalVisible(car);
+  }
+  const onDeleteCarModalClose = () => {
+    setDeleteCarModalVisible(null);
   }
 
   const renderCars = () => {
     if (isCarsLoading) {
       return <CircularProgress />
     };
-    if (!data?.data) {
-      return <Typography>No cars available</Typography>
+    if (!allCarsData?.data || !allCarsData.data.length) {
+      return (
+          <>
+            <Typography>No cars available
+              <Button  onClick={handleAddNewCar} variant='outlined'>add new car</Button>
+            </Typography>
+          </>
+      );
     }
-    return data.data.map((item:Car) => <CarItem {...{ item }} key={item.id} />)
+
+    // @ts-ignore
+    return allCarsData.data.map((item:Car) => <CarItem {...item } onEdit={showEditModal} onDelete={showRemoveModal} key={item.id} />)
+  }
+
+  const onAddCarModalClose = () => {
+    setAddNewCarModalVisible(false);
+  }
+  const onAddCarModalSubmit = async (values: Car) => {
+    const input = { ...values, price: Number(values.price), year: Number(values.year) };
+    const result = await addCar(input);
+    console.log('result: ', result);
+    if (('error' in result)) {
+      errorNotification('Error while adding the car');
+    } else {
+      successNotification('Car was added successfully');
+    }
+    onAddCarModalClose();
+    refetchAllCars();
+  }
+
+  const onEditCarModalClose = () => {
+    setEditCarModalVisible(null);
+  }
+  const onEditCarModalSubmit = async (values: Car) => {
+    console.log('onEditCarModalSubmit values: ', values);
+    const {id , ...input} = { ...values, price: Number(values.price), year: Number(values.year) };
+    console.log('onEditCarModalSubmit input: ', input);
+    const result = await editCar({id, input});
+    console.log('onEditCarModalSubmit result: ', result);
+
+    if (('error' in result)) {
+      errorNotification('Error while editing the car');
+    } else {
+      successNotification('Car was edited successfully');
+    }
+    onEditCarModalClose();
+    refetchAllCars();
+  }
+
+  const onDeleteCarModalSubmit = async () => {
+    // @ts-ignore
+    const result = await deleteCar(deleteCarModalVisible?.id);
+    if (('error' in result)) {
+      errorNotification('Error while deleting the car');
+    } else {
+      successNotification('Car was deleted successfully.');
+    }
+    onDeleteCarModalClose();
+    refetchAllCars();
+  }
+
+  const toggleFilterBar = () => {
+    setIsFilterBarVisible((prev) => !prev);
+  }
+
+  const itemsCount = (allCarsData: any) => {
+    if (!allCarsData?.data.length) {
+      return '0 items';
+    }
+    const count = allCarsData.data?.length;
+    return `(${count} item${count === 1 ? '' : 's'})`;
   }
 
   return (
     <Container maxWidth='lg'>
       <Box>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Typography component='p'>Cars list</Typography>
-          <Button onClick={handleAddNewCar} variant='outlined'>Add</Button>
+        <Box height={20} />
+        <Box sx={styles.header}>
+          <Typography component='p'>Cars list {itemsCount(allCarsData)}</Typography>
+          <Tooltip title='Add car'>
+            <Button sx={styles.addButton} onClick={handleAddNewCar} variant='outlined'>Add</Button>
+          </Tooltip>
+          <Tooltip title={`${isFilterBarVisible ? 'Close' : 'Show'} filters`}>
+            <Button sx={styles.addButton} onClick={toggleFilterBar} variant='outlined'>{isFilterBarVisible ? <CloseIcon /> : <FilterAltIcon /> } </Button>
+          </Tooltip>
         </Box>
-
-        <Box height={50} />
+        <Box height={20} />
         {renderCars()}
+        {addNewCarModalVisible && (
+            <CarModal
+                onClose={onAddCarModalClose}
+                onSubmit={onAddCarModalSubmit}
+                title='Add new car'
+                load={isAddCarLoading}
+            />
+        )}
+        {editCarModalVisible && (
+            <CarModal
+                onClose={onEditCarModalClose}
+                onSubmit={onEditCarModalSubmit}
+                title='Edit car'
+                initValues={editCarModalVisible}
+                load={isEditCarLoading}
+            />
+        )}
+        {deleteCarModalVisible && (
+            <Modal
+                title='Deleting car'
+                body={`Are you really want to delete car with model ${deleteCarModalVisible.model} from ${deleteCarModalVisible.country}`}
+                onClose={onDeleteCarModalClose}
+                onSubmit={onDeleteCarModalSubmit}
+            />
+        )}
       </Box>
     </Container>
 )

@@ -14,15 +14,17 @@ const carSchema = Joi.object({
     .required()
     .min(1900)
     .max(new Date().getFullYear()),
-  price: Joi.number().required()
+  price: Joi.number().required().min(1)
 })
 
 export const validateCar = (values: Car) => {
 
   const validateCarSchema = carSchema.validate(
     { ...values },
-    { abortEarly: false }
+    { abortEarly: false, allowUnknown: true }
   );
+
+  console.log('Validate: ', validateCarSchema.error)
 
   if (validateCarSchema.error) {
     return Object.fromEntries(
@@ -32,6 +34,7 @@ export const validateCar = (values: Car) => {
       ])
     );
   }
+
 
   return {};
 }

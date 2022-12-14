@@ -6,7 +6,7 @@ const PageNotFound = (props: any) => {
   return (
     <div>
       <h2>404 Page not found</h2>
-  <Link to={BASIC_ROUTES.CARS} >Link to cars page</Link>
+  <Link to={BASIC_ROUTES.HOME} >Link to cars page</Link>
   </div>
 )
 }

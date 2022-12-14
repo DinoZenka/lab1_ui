@@ -13,3 +13,19 @@ const notification: notificationType = {
 };
 
 export default notification;
+
+export const successNotification = (message: string, options?: {[p: string]: string}) => {
+  // @ts-ignore
+  notification?.invoke(message, {
+    variant: 'success',
+    ...options,
+  })
+}
+
+export const errorNotification = (message: string, options?: {[p: string]: string}) => {
+  // @ts-ignore
+  notification?.invoke(message, {
+    variant: 'error',
+    ...options,
+  })
+}

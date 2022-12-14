@@ -7,4 +7,6 @@ export type FormCar = {
 
 export type Car = FormCar & {
   id: string,
+  createdAt?: string,
+  updatedAt?: string,
 }

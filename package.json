@@ -2,9 +2,13 @@
   "name": "fe",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "19.1.0"
+  },
   "dependencies": {
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
+    "@mui/icons-material": "^5.11.0",
     "@mui/material": "^5.10.12",
     "@reduxjs/toolkit": "^1.9.0",
     "@testing-library/jest-dom": "^5.16.5",

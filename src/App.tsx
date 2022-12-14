@@ -8,6 +8,10 @@ import { Provider } from 'react-redux'
 import AppRoutes from './navigation/Routes'
 
 function App() {
+    React.useEffect(() => {
+        console.log('process.env.REACT_APP_BASE_API_URL: ', process.env.REACT_APP_BASE_API_URL);
+    }, []);
+
   return (
     <Provider store={store}>
       <BrowserRouter>
