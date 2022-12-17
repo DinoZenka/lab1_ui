@@ -2,8 +2,13 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 import {Car, FormCar} from 'types';
 import { API } from '../../constants'
 
+export interface carFilters {
+  filter: { [p: string]: string },
+  sort: string
+}
+
 type queryCarResponse = {
-  data: Car[],
+  data: { cars: Car[], models: string[] },
   message: string,
 }
 
@@ -17,8 +22,14 @@ export const carsApi = createApi({
   reducerPath: 'carsApi',
   baseQuery: fetchBaseQuery({ baseUrl: API.CARS }),
   endpoints: (builder) => ({
-    getAllCars: builder.query<queryCarResponse, void>({
-      query: () => '/',
+    getAllCars: builder.query<any, carFilters>({
+      query: (filters: carFilters) => {
+        return ({
+          url: '/',
+          method: 'GET',
+          params: {...filters, filter: JSON.stringify(filters.filter)},
+        })
+      },
     }),
     addCar: builder.mutation<mutationCarResponse, Car>({
       query: (body: Car) => ({

@@ -27,7 +27,7 @@ const Modal: React.FC<IProps> = (props) => {
             </DialogContentText>
         </DialogContent>
         <DialogActions>
-            <Button onClick={onClose}>{buttonText.close}</Button>
+            <Button onClick={onClose} color='secondary'>{buttonText.close}</Button>
             <Button onClick={onSubmit} autoFocus>{buttonText.submit}</Button>
         </DialogActions>
     </Dialog>

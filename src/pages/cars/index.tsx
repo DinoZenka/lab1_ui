@@ -2,17 +2,20 @@ import React from 'react'
 import {Box, Button, CircularProgress, Container, Tooltip, Typography} from '@mui/material'
 import CarItem from './components/car-item'
 import { Car } from '../../types'
-import {useGetAllCarsQuery, useAddCarMutation, useDeleteCarMutation, useEditCarMutation} from '../../store/cars/services'
+import {useGetAllCarsQuery, useAddCarMutation, useDeleteCarMutation, useEditCarMutation, carFilters} from '../../store/cars/services'
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import CloseIcon from '@mui/icons-material/Close';
 import { styles } from './styles';
 import CarModal from '../../components/CarModal';
 import Modal from '../../components/Modal';
 import {errorNotification, successNotification} from '../../helpers';
+import CarFilters from './components/filters';
 
 const CarsPage: React.FC = () => {
+  const defaultFilters: carFilters = { filter: { model: '' }, sort: 'price_DESC' };
+  const [filters, setFilters] = React.useState(defaultFilters);
 
-  const { refetch: refetchAllCars, data: allCarsData, error: getAllCarsError, isLoading: isCarsLoading } = useGetAllCarsQuery()
+  const { refetch: refetchAllCars, data: allCarsData, error: getAllCarsError, isLoading: isCarsLoading } = useGetAllCarsQuery(filters)
   const [addCar, { isLoading: isAddCarLoading } ] = useAddCarMutation()
   const [editCar, { isLoading: isEditCarLoading } ] = useEditCarMutation()
   const [deleteCar] = useDeleteCarMutation()
@@ -21,7 +24,15 @@ const CarsPage: React.FC = () => {
   const [editCarModalVisible, setEditCarModalVisible] = React.useState<Car | null>(null);
   const [deleteCarModalVisible, setDeleteCarModalVisible] = React.useState<Car | null>(null);
 
-  const [isFilterBarVisible, setIsFilterBarVisible] = React.useState<boolean>(false);
+
+  const [isFilterBarVisible, setIsFilterBarVisible] = React.useState<boolean>(true);
+
+  const setCarFilter = (value: any) => {
+    setFilters((prev: any) => ({ ...prev, 'filter': { ...prev.filters, ...value } }));
+  }
+  const setCarSort = (value: any) => {
+    setFilters((prev: any) => ({ ...prev, 'sort': value }));
+  }
 
   const handleAddNewCar = () => {
     setAddNewCarModalVisible(true);
@@ -29,13 +40,12 @@ const CarsPage: React.FC = () => {
   const showEditModal = (id: string) => {
 
     // @ts-ignore
-    const {createdAt, updatedAt, ...rest}: Car = allCarsData.data.find((item:Car) => item.id === id);
+    const {createdAt, updatedAt, ...rest}: Car = allCarsData.cars.find((item:Car) => item.id === id);
     setEditCarModalVisible(rest);
   }
   const showRemoveModal = (id: string) => {
-
     // @ts-ignore
-    const car: Car = allCarsData?.data.find((item:Car) => item.id === id);
+    const car: Car = allCarsData?.cars.find((item:Car) => item.id === id);
     setDeleteCarModalVisible(car);
   }
   const onDeleteCarModalClose = () => {
@@ -46,7 +56,7 @@ const CarsPage: React.FC = () => {
     if (isCarsLoading) {
       return <CircularProgress />
     };
-    if (!allCarsData?.data || !allCarsData.data.length) {
+    if (!allCarsData?.cars || !allCarsData.cars.length) {
       return (
           <>
             <Typography>No cars available
@@ -55,9 +65,8 @@ const CarsPage: React.FC = () => {
           </>
       );
     }
-
     // @ts-ignore
-    return allCarsData.data.map((item:Car) => <CarItem {...item } onEdit={showEditModal} onDelete={showRemoveModal} key={item.id} />)
+    return allCarsData.cars.map((item:Car) => <CarItem {...item } onEdit={showEditModal} onDelete={showRemoveModal} key={item.id} />)
   }
 
   const onAddCarModalClose = () => {
@@ -66,7 +75,7 @@ const CarsPage: React.FC = () => {
   const onAddCarModalSubmit = async (values: Car) => {
     const input = { ...values, price: Number(values.price), year: Number(values.year) };
     const result = await addCar(input);
-    console.log('result: ', result);
+
     if (('error' in result)) {
       errorNotification('Error while adding the car');
     } else {
@@ -80,11 +89,8 @@ const CarsPage: React.FC = () => {
     setEditCarModalVisible(null);
   }
   const onEditCarModalSubmit = async (values: Car) => {
-    console.log('onEditCarModalSubmit values: ', values);
     const {id , ...input} = { ...values, price: Number(values.price), year: Number(values.year) };
-    console.log('onEditCarModalSubmit input: ', input);
     const result = await editCar({id, input});
-    console.log('onEditCarModalSubmit result: ', result);
 
     if (('error' in result)) {
       errorNotification('Error while editing the car');
@@ -109,13 +115,14 @@ const CarsPage: React.FC = () => {
 
   const toggleFilterBar = () => {
     setIsFilterBarVisible((prev) => !prev);
+    setCarFilter(defaultFilters);
   }
 
   const itemsCount = (allCarsData: any) => {
-    if (!allCarsData?.data.length) {
+    if (!allCarsData?.cars.length) {
       return '0 items';
     }
-    const count = allCarsData.data?.length;
+    const count = allCarsData.cars?.length;
     return `(${count} item${count === 1 ? '' : 's'})`;
   }
 
@@ -133,6 +140,7 @@ const CarsPage: React.FC = () => {
           </Tooltip>
         </Box>
         <Box height={20} />
+        {isFilterBarVisible && <CarFilters { ...{ models: allCarsData?.models, filters, setCarFilter, setCarSort }} />}
         {renderCars()}
         {addNewCarModalVisible && (
             <CarModal
@@ -154,7 +162,7 @@ const CarsPage: React.FC = () => {
         {deleteCarModalVisible && (
             <Modal
                 title='Deleting car'
-                body={`Are you really want to delete car with model ${deleteCarModalVisible.model} from ${deleteCarModalVisible.country}`}
+                body={`Are you really want to delete car with model ${deleteCarModalVisible.model} from ${deleteCarModalVisible.country}?`}
                 onClose={onDeleteCarModalClose}
                 onSubmit={onDeleteCarModalSubmit}
             />
