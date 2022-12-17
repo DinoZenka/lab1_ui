@@ -5,7 +5,6 @@ import { Car } from 'types'
 const carSchema = Joi.object({
   model: Joi.string()
     .required()
-    .alphanum()
     .max(50)
     .required(),
   country: Joi.string().required().max(60),
@@ -23,8 +22,6 @@ export const validateCar = (values: Car) => {
     { ...values },
     { abortEarly: false, allowUnknown: true }
   );
-
-  console.log('Validate: ', validateCarSchema.error)
 
   if (validateCarSchema.error) {
     return Object.fromEntries(
