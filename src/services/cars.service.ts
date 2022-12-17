@@ -7,9 +7,19 @@ import { isEmpty } from '@utils/util';
 class CarsService {
   public cars = DB.Cars;
 
-  public async findAllCars(): Promise<Car[]> {
-    const allCars: Car[] = await this.cars.findAll();
+  public async findAllCars(carParams: any): Promise<Car[]> {
+    const filters = carParams.filters?.model ? { model: carParams.filters?.model } : {};
+    const order = carParams.order || [];
+
+    const allCars: Car[] = await this.cars.findAll({ order, where: filters });
     return allCars;
+  }
+
+  public async findAllModels(): Promise<string[]> {
+    const carsWithModels: Car[] = await this.cars.aggregate('model', 'DISTINCT', { plain: false });
+
+    const models: string[] = carsWithModels.map((item: any) => item.DISTINCT);
+    return models;
   }
 
   public async findCarById(carId: number): Promise<Car> {

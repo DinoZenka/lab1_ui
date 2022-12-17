@@ -11,7 +11,7 @@ export class CreateCarDto {
   public price: number;
 
   @IsInt()
-  @Min(1950)
+  @Min(1900)
   @Max(2150)
   public year: number;
 }

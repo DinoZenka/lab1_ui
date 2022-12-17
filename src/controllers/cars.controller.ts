@@ -8,9 +8,18 @@ class CarsController {
 
   public getCars = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const findAllCarsData: Car[] = await this.carsService.findAllCars();
+      const { filter, sort } = req.query;
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const order = sort ? [sort.split('_')] : [[]];
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const filters = JSON.parse(filter);
 
-      res.status(200).json({ data: findAllCarsData, message: 'findAll' });
+      const findAllCarsData: Car[] = await this.carsService.findAllCars({ filters, order });
+      const findAllModels: string[] = await this.carsService.findAllModels();
+
+      res.status(200).json({ cars: findAllCarsData, models: findAllModels, message: 'findAll' });
     } catch (error) {
       next(error);
     }
@@ -30,7 +39,6 @@ class CarsController {
   public createCar = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userData: CreateCarDto = req.body;
-      console.log('userData: ', userData);
       const createCarData: Car = await this.carsService.createCar(userData);
 
       res.status(201).json({ data: createCarData, message: 'created' });
